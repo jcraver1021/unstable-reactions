@@ -28,15 +28,23 @@ function App() {
     });
   };
 
-  const updatePosition = (m: MassProps) => {
-    return { ...m, pos: m.pos.sum(m.v) };
+  const updateKinematics = (m: MassProps, masses: MassProps[]) => {
+    let a = new Vector2D(0, 0);
+    for (let mi of masses) {
+      if (mi.id != m.id) {
+        const g = 50; // no but whatever
+        const aMag = (g * mi.mass) / m.pos.squaredistance(mi.pos);
+        const theta = m.pos.angle(mi.pos);
+        a = a.sum(new Vector2D(Math.cos(theta), Math.sin(theta)).scale(aMag));
+      }
+    }
+    return { ...m, pos: m.pos.sum(m.v), v: m.v.sum(a) };
   };
 
   const step = () => {
     setMasses((prevState: MassProps[]) => {
       return prevState.map((m: MassProps) => {
-        console.log(m);
-        return updatePosition(m);
+        return updateKinematics(m, prevState);
       });
     });
   };
@@ -58,9 +66,22 @@ function App() {
 
   return (
     <div>
-      {masses.map((m: MassProps) => (
-        <Mass {...m} key={m.id} />
-      ))}
+      <div>
+        {masses.map((m: MassProps) => (
+          <Mass {...m} key={m.id} />
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => {
+          // TODO: evict any masses that get too far away?
+          // outside of view window? no, they interact gravitationally
+          // should be outside of "relevance" threshold
+          setMasses([]);
+        }}
+      >
+        Reset
+      </button>
     </div>
   );
 }
