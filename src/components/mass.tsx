@@ -2,10 +2,8 @@
 import { Vector2D } from "../common/vector2d";
 
 export type MassProps = {
-  id: string;
-  pos: Vector2D;
-  v: Vector2D;
   mass: number;
+  pos: Vector2D;
 };
 
 export default function Mass(props: MassProps) {
