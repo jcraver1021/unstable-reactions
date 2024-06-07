@@ -29,6 +29,7 @@ function App() {
   };
 
   const step = () => {
+    // TODO: Handle collisions
     setMasses((prevState: NewtonianMass[]) => {
       return prevState.map((m: NewtonianMass) => {
         return m.next(1, prevState);
@@ -37,6 +38,7 @@ function App() {
   };
 
   useEffect(() => {
+    // TODO: Attach to a smaller component for visualization
     document.addEventListener("click", draw);
     return () => {
       document.removeEventListener("click", draw);
