@@ -1,35 +1,78 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import Mass from "./components/mass";
+import { v4 as uuidv4 } from "uuid";
+import "./App.css";
+import { Vector2D } from "./common/vector2d";
+import { NewtonianMass } from "./common/newton";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [masses, setMasses] = useState<NewtonianMass[]>([]);
+
+  const getRandomInt = (min: number, max: number) => {
+    return Math.floor(Math.random() * (max - min)) + min;
+  };
+
+  const draw = (e: any) => {
+    const { clientX, clientY } = e;
+
+    setMasses((prevState: NewtonianMass[]) => {
+      const mass = getRandomInt(10, 50);
+      const current = new NewtonianMass(
+        uuidv4(),
+        getRandomInt(10, 50),
+        new Vector2D(clientX + mass / 2, clientY + mass / 2),
+        new Vector2D(getRandomInt(-5, 5), getRandomInt(-5, 5)),
+      );
+
+      return [...prevState, current];
+    });
+  };
+
+  const step = () => {
+    // TODO: Handle collisions
+    setMasses((prevState: NewtonianMass[]) => {
+      return prevState.map((m: NewtonianMass) => {
+        return m.next(1, prevState);
+      });
+    });
+  };
+
+  useEffect(() => {
+    // TODO: Attach to a smaller component for visualization
+    document.addEventListener("click", draw);
+    return () => {
+      document.removeEventListener("click", draw);
+    };
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      step();
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <>
+    <div>
       <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        {masses.map((m: NewtonianMass) => (
+          <Mass {...m} key={m.id} />
+        ))}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+      <button
+        type="button"
+        onClick={() => {
+          // TODO: evict any masses that get too far away?
+          // outside of view window? no, they interact gravitationally
+          // should be outside of "relevance" threshold
+          setMasses([]);
+        }}
+      >
+        Reset
+      </button>
+    </div>
+  );
 }
 
-export default App
+export default App;
